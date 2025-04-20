@@ -7,25 +7,34 @@ import (
 	"studyCRUD/internal/database"
 	"studyCRUD/internal/handlers"
 	"studyCRUD/internal/taskService"
+	"studyCRUD/internal/userService"
 	"studyCRUD/internal/web/tasks"
+	"studyCRUD/internal/web/users"
 )
 
 func main() {
 
 	database.InitDB()
 
-	repo := taskService.NewTaskRepository(database.DB)
-	service := taskService.NewTaskService(repo)
+	repoTask := taskService.NewTaskRepository(database.DB)
+	serviceTasks := taskService.NewTaskService(repoTask)
 
-	handler := handlers.NewHandler(service)
+	repoUsers := userService.NewUserRepository(database.DB, repoTask)
+	serviceUsers := userService.NewUserService(repoUsers)
+
+	taskHTTPHandler := handlers.NewTaskHandler(serviceTasks)
+	userHTTPHandler := handlers.NewUserHandler(serviceUsers)
 
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
-	strictHandler := tasks.NewStrictHandler(handler, nil)
-	tasks.RegisterHandlers(e, strictHandler)
+	tasksHandler := tasks.NewStrictHandler(taskHTTPHandler, nil)
+	tasks.RegisterHandlers(e, tasksHandler)
+
+	usersHandler := users.NewStrictHandler(userHTTPHandler, nil)
+	users.RegisterHandlers(e, usersHandler)
 
 	if err := e.Start(":8080"); err != nil {
 		log.Fatal("failed to start with error", err)

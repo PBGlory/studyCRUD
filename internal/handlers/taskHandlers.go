@@ -10,7 +10,7 @@ type Handler struct {
 	Service *taskService.TaskService
 }
 
-func NewHandler(service *taskService.TaskService) *Handler {
+func NewTaskHandler(service *taskService.TaskService) *Handler {
 	return &Handler{Service: service}
 }
 
@@ -20,37 +20,38 @@ func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (ta
 		return nil, err
 	}
 
-	response := tasks.GetTasks200JSONResponse{}
+	var response []tasks.Task
 
 	for _, tsk := range allTasks {
 		task := tasks.Task{
 			Id:     &tsk.ID,
-			Task:   &tsk.Task,
-			IsDone: &tsk.IsDone,
+			Task:   tsk.Task,
+			IsDone: tsk.IsDone,
 		}
 		response = append(response, task)
 	}
 
-	return response, nil
+	return tasks.GetTasks200JSONResponse(response), nil
 }
 
 func (h *Handler) PostTasks(_ context.Context, request tasks.PostTasksRequestObject) (tasks.PostTasksResponseObject, error) {
 	taskRequest := request.Body
 
 	taskToCreate := taskService.Task{
-		Task:   *taskRequest.Task,
-		IsDone: *taskRequest.IsDone,
+		Task:   taskRequest.Task,
+		IsDone: taskRequest.IsDone,
+		UserID: taskRequest.UserId,
 	}
 	createdTask, err := h.Service.CreateTask(taskToCreate)
-
 	if err != nil {
 		return nil, err
 	}
 
 	response := tasks.PostTasks201JSONResponse{
 		Id:     &createdTask.ID,
-		Task:   &createdTask.Task,
-		IsDone: &createdTask.IsDone,
+		Task:   createdTask.Task,
+		IsDone: createdTask.IsDone,
+		UserId: createdTask.UserID,
 	}
 
 	return response, nil
@@ -77,10 +78,13 @@ func (h *Handler) PatchTasksId(_ context.Context, request tasks.PatchTasksIdRequ
 	}
 
 	if request.Body.Task != nil {
-		taskToUpdate.Task = *request.Body.Task
+		taskToUpdate.Task = request.Body.Task
 	}
 	if request.Body.IsDone != nil {
-		taskToUpdate.IsDone = *request.Body.IsDone
+		taskToUpdate.IsDone = request.Body.IsDone
+	}
+	if request.Body.UserId != nil {
+		taskToUpdate.UserID = request.Body.UserId
 	}
 
 	updatedTask, err := h.Service.UpdateTaskByID(taskID, *taskToUpdate)
@@ -89,15 +93,16 @@ func (h *Handler) PatchTasksId(_ context.Context, request tasks.PatchTasksIdRequ
 	}
 	return tasks.PatchTasksId200JSONResponse{
 		Id:     &updatedTask.ID,
-		Task:   &updatedTask.Task,
-		IsDone: &updatedTask.IsDone,
+		Task:   updatedTask.Task,
+		IsDone: updatedTask.IsDone,
+		UserId: updatedTask.UserID,
 	}, nil
 }
 
 func (h *Handler) DeleteTasksId(_ context.Context, request tasks.DeleteTasksIdRequestObject) (tasks.DeleteTasksIdResponseObject, error) {
 	taskID := uint(request.Id)
 
-	err := h.Service.DeleteTaskById(taskID)
+	err := h.Service.DeleteTaskByID(taskID)
 	if err != nil {
 		return nil, err
 	}

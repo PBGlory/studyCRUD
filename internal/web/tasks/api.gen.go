@@ -18,7 +18,8 @@ import (
 type Task struct {
 	Id     *uint   `json:"id,omitempty"`
 	IsDone *bool   `json:"is_done,omitempty"`
-	Task   *string `json:"task,omitempty"`
+	Task   *string `json:"task"`
+	UserId *uint   `json:"user_id"`
 }
 
 // PostTasksJSONRequestBody defines body for PostTasks for application/json ContentType.
@@ -126,10 +127,10 @@ func RegisterHandlersWithBaseURL(router EchoRouter, si ServerInterface, baseURL 
 		Handler: si,
 	}
 
-	router.GET(baseURL+"/api/tasks", wrapper.GetTasks)
-	router.POST(baseURL+"/api/tasks", wrapper.PostTasks)
-	router.DELETE(baseURL+"/api/tasks/:id", wrapper.DeleteTasksId)
-	router.PATCH(baseURL+"/api/tasks/:id", wrapper.PatchTasksId)
+	router.GET(baseURL+"/tasks", wrapper.GetTasks)
+	router.POST(baseURL+"/tasks", wrapper.PostTasks)
+	router.DELETE(baseURL+"/tasks/:id", wrapper.DeleteTasksId)
+	router.PATCH(baseURL+"/tasks/:id", wrapper.PatchTasksId)
 
 }
 
