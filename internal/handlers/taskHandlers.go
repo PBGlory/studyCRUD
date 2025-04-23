@@ -20,7 +20,7 @@ func (h *Handler) GetTasks(_ context.Context, _ tasks.GetTasksRequestObject) (ta
 		return nil, err
 	}
 
-	var response []tasks.Task
+	response := make([]tasks.Task, 0)
 
 	for _, tsk := range allTasks {
 		task := tasks.Task{

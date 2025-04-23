@@ -40,7 +40,8 @@ func (h *Handlers) GetUsersIdTasks(_ context.Context, request users.GetUsersIdTa
 		return nil, err
 	}
 
-	var responseTasks []users.Task
+	responseTasks := make([]users.Task, 0)
+
 	for _, task := range dbTasks {
 		responseTask := users.Task{
 			Id:     task.Id,
